@@ -2,15 +2,12 @@
 pragma solidity ^0.8.18;
 import {Script, console} from "forge-std/Script.sol";
 import {V1Exchange} from "../src/V1Exchange.sol";
-import {V1Version} from "../src/V1Version.sol";
 
-contract DeployV1Exchange is Script {
+contract DeployExchange is Script {
     function run() external returns (V1Exchange) {
-        V1Version version;
-        V1Exchange exchange;
+        address tokenAddress = 0xf05655805A6421c7d03D0dfD029C836F8d37d1A1;
         vm.startBroadcast();
-        version = new V1Version("Abhi", "ABH", 100000 * 10 ** 18);
-        exchange = new V1Exchange(address(version));
+        V1Exchange exchange = new V1Exchange(tokenAddress);
         vm.stopBroadcast();
         return exchange;
     }
