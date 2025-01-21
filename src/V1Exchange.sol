@@ -3,20 +3,30 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract V1Exchange {
+contract V1Exchange is ERC20 {
     address public tokenAddress;
 
     receive() external payable {}
 
-    constructor(address _token) {
+    constructor(address _token) ERC20("Zuniswap", "ZV1") {
         require(_token != address(0), "Invalid Token Address");
         tokenAddress = _token;
     }
 
-    function addLiquidity(uint256 _tokenAmmount) public payable {
-        IERC20 token = IERC20(tokenAddress);
-        token.transferFrom(msg.sender, address(this), _tokenAmmount);
+    function addLiquidity(uint256 _tokenAmount) public payable {
+        if (getReserve() == 0) {
+            IERC20 token = IERC20(tokenAddress);
+            token.transferFrom(msg.sender, address(this), _tokenAmount);
+        } else {
+            uint256 ethReserve = address(this).balance - msg.value;
+            uint256 tokenReserve = getReserve();
+            uint256 tokenAmount = (msg.value * tokenReserve) / ethReserve;
+            require(_tokenAmount >= tokenAmount, "Invalid token amount");
+            IERC20 token = IERC20(tokenAddress);
+            token.transferFrom(msg.sender, address(this), tokenAmount);
+        }
     }
 
     function getReserve() public view returns (uint256) {

@@ -37,7 +37,7 @@ contract V1ExchangeTest is Test {
         assertEq(address(exchange).balance, totalEther);
     }
 
-    function testGetEthAmount() public {
+    function testGetEthAmount() public view {
         uint256 tokenSold = 100 * 10 ** 18;
         uint256 ethAmount = exchange.getEthAmount(tokenSold);
         uint256 expectedEthAmount = (tokenSold * address(exchange).balance) /
@@ -46,7 +46,7 @@ contract V1ExchangeTest is Test {
         assertEq(ethAmount, expectedEthAmount);
     }
 
-    function testGetTokenAmount() public {
+    function testGetTokenAmount() public view {
         uint256 ethSold = 0.1 ether;
         uint256 tokenAmount = exchange.getTokenAmount(ethSold);
         uint256 expectedTokenAmount = (ethSold * AMOUNT_SENT) /
