@@ -19,6 +19,8 @@ contract V1Exchange is ERC20 {
         if (getReserve() == 0) {
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), _tokenAmount);
+            uint256 liquidityTokens = address(this).balance;
+            _mint(msg.sender, liquidityTokens);
         } else {
             uint256 ethReserve = address(this).balance - msg.value;
             uint256 tokenReserve = getReserve();
@@ -26,6 +28,8 @@ contract V1Exchange is ERC20 {
             require(_tokenAmount >= tokenAmount, "Invalid token amount");
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tokenAmount);
+            uint256 liquidityTokens = (tokenAmount * msg.value) / ethReserve;
+            _mint(msg.sender, liquidityTokens);
         }
     }
 
@@ -39,7 +43,11 @@ contract V1Exchange is ERC20 {
         uint256 outputReserve
     ) public pure returns (uint256) {
         require(inputReserve > 0 && outputReserve > 0, "Not enough reserves");
-        return (inputAmount * outputReserve) / (inputAmount + inputReserve);
+        uint256 inputAmountWithFee = inputAmount * 99;
+        uint256 numerator = inputAmountWithFee * outputReserve;
+        uint256 denominator = (inputReserve * 100) + inputAmountWithFee;
+
+        return numerator / denominator;
     }
 
     function getEthAmount(uint256 _tokenSold) public view returns (uint256) {
