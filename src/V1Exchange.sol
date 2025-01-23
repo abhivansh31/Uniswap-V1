@@ -28,7 +28,7 @@ contract V1Exchange is ERC20 {
             require(_tokenAmount >= tokenAmount, "Invalid token amount");
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tokenAmount);
-            uint256 liquidityTokens = (tokenAmount * msg.value) / ethReserve;
+            uint256 liquidityTokens = (totalSupply() * msg.value) / ethReserve;
             _mint(msg.sender, liquidityTokens);
         }
     }
@@ -89,5 +89,19 @@ contract V1Exchange is ERC20 {
             tokenAmount
         );
         payable(msg.sender).transfer(ethAmount);
+    }
+
+    function removeLiquidity(
+        uint256 _amount
+    ) public returns (uint256, uint256) {
+        require(_amount > 0, "Not Enough LP Tokens");
+        uint256 ethAmount = (address(this).balance * _amount) / totalSupply();
+        uint256 tokenAmount = (getReserve() * _amount) / totalSupply();
+
+        _burn(msg.sender, _amount);
+        payable(msg.sender).transfer(ethAmount);
+        IERC20(tokenAddress).transfer(msg.sender, tokenAmount);
+
+        return (ethAmount, tokenAmount);
     }
 }

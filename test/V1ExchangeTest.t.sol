@@ -10,8 +10,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract V1ExchangeTest is Test {
     V1Exchange public exchange;
     V1Version public token;
-    uint256 private constant AMOUNT_SENT = 1_000 * 10 ** 18; // Initial token liquidity
-    uint256 private constant LIQUIDITY_AMOUNT = 500 * 10 ** 18; // User adds liquidity
+    uint256 private constant AMOUNT_SENT = 1_000 * 10 ** 18;
+    uint256 private constant LIQUIDITY_AMOUNT = 500 * 10 ** 18;
     address public user = address(0xA240CC375B0663A779d91A007AEa99CfA2e4f4A5);
 
     function setUp() public {
@@ -40,8 +40,9 @@ contract V1ExchangeTest is Test {
     function testGetEthAmount() public view {
         uint256 tokenSold = 100 * 10 ** 18;
         uint256 ethAmount = exchange.getEthAmount(tokenSold);
-        uint256 expectedEthAmount = (tokenSold * address(exchange).balance) /
-            (tokenSold + AMOUNT_SENT);
+        uint256 expectedEthAmount = ((tokenSold * 99) *
+            address(exchange).balance) /
+            ((tokenSold * 99) + (100 * AMOUNT_SENT));
 
         assertEq(ethAmount, expectedEthAmount);
     }
@@ -49,8 +50,8 @@ contract V1ExchangeTest is Test {
     function testGetTokenAmount() public view {
         uint256 ethSold = 0.1 ether;
         uint256 tokenAmount = exchange.getTokenAmount(ethSold);
-        uint256 expectedTokenAmount = (ethSold * AMOUNT_SENT) /
-            (ethSold + address(exchange).balance);
+        uint256 expectedTokenAmount = ((ethSold * 99) * AMOUNT_SENT) /
+            ((ethSold * 99) + (100 * address(exchange).balance));
 
         assertEq(tokenAmount, expectedTokenAmount);
     }
@@ -78,5 +79,24 @@ contract V1ExchangeTest is Test {
 
         assertEq(token.balanceOf(user), AMOUNT_SENT + expectedTokenAmount);
         assertEq(address(exchange).balance, 1 ether + ethSold);
+    }
+
+    function testRemoveLiquidity() public {
+        vm.startPrank(user);
+        token.approve(address(exchange), AMOUNT_SENT);
+        exchange.addLiquidity{value: 0.5 ether}(AMOUNT_SENT);
+        uint256 totalLpTokens = exchange.totalSupply();
+        uint256 lpTokensToRemove = totalLpTokens;
+        uint256 ethAmountExpected = (address(exchange).balance *
+            lpTokensToRemove) / totalLpTokens;
+        uint256 tokenAmountExpected = (exchange.getReserve() *
+            lpTokensToRemove) / totalLpTokens;
+        (uint256 ethAmount, uint256 tokenAmount) = exchange.removeLiquidity(
+            lpTokensToRemove
+        );
+        vm.stopPrank();
+
+        assertEq(ethAmount, ethAmountExpected);
+        assertEq(tokenAmount, tokenAmountExpected);
     }
 }
