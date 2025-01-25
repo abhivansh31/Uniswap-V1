@@ -82,9 +82,15 @@ contract V1ExchangeTest is Test {
     }
 
     function testRemoveLiquidity() public {
+        console.log("Total Supply: ", exchange.totalSupply());
+        console.log(address(exchange).balance);
+        console.log(exchange.getReserve());
         vm.startPrank(user);
         token.approve(address(exchange), AMOUNT_SENT);
         exchange.addLiquidity{value: 0.5 ether}(AMOUNT_SENT);
+        console.log("Total Supply: ", exchange.totalSupply());
+        console.log(address(exchange).balance);
+        console.log(exchange.getReserve());
         uint256 totalLpTokens = exchange.totalSupply();
         uint256 lpTokensToRemove = totalLpTokens;
         uint256 ethAmountExpected = (address(exchange).balance *

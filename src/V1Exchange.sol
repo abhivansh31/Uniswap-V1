@@ -7,12 +7,14 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract V1Exchange is ERC20 {
     address public tokenAddress;
+    address public factoryAddress;
 
     receive() external payable {}
 
     constructor(address _token) ERC20("Zuniswap", "ZV1") {
         require(_token != address(0), "Invalid Token Address");
         tokenAddress = _token;
+        factoryAddress = msg.sender;
     }
 
     function addLiquidity(uint256 _tokenAmount) public payable {
@@ -28,7 +30,7 @@ contract V1Exchange is ERC20 {
             require(_tokenAmount >= tokenAmount, "Invalid token amount");
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tokenAmount);
-            uint256 liquidityTokens = (totalSupply() * msg.value) / ethReserve;
+            uint256 liquidityTokens = (tokenAmount * msg.value) / ethReserve;
             _mint(msg.sender, liquidityTokens);
         }
     }
